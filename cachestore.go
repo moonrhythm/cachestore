@@ -55,6 +55,15 @@ func Get[T any](key string) (T, bool) {
 	return it.data.(T), true
 }
 
+func GetStale[T any](key string) (T, bool) {
+	v, ok := store.Load(key)
+	if !ok {
+		return *new(T), false
+	}
+	it := v.(*item)
+	return it.data.(T), true
+}
+
 func Delete(key string) {
 	store.Delete(key)
 }

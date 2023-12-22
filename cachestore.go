@@ -68,12 +68,24 @@ func DeleteTag(tag string) {
 	t := time.Now()
 	store.Range(func(key, value any) bool {
 		it := value.(*item)
-		if !it.CreateAfter(t) { // new version
+		if it.CreateAfter(t) { // new version
 			return true
 		}
 		if it.tag == tag {
 			store.Delete(key)
 		}
+		return true
+	})
+}
+
+func Clear() {
+	t := time.Now()
+	store.Range(func(key, value any) bool {
+		it := value.(*item)
+		if it.CreateAfter(t) { // new version
+			return true
+		}
+		store.Delete(key)
 		return true
 	})
 }

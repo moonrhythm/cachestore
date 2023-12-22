@@ -46,18 +46,13 @@ func Set(key string, value any, opt *SetOptions) {
 func Get[T any](key string) (T, bool) {
 	v, ok := store.Load(key)
 	if !ok {
-		return zero[T](), false
+		return *new(T), false
 	}
 	it := v.(*item)
 	if it.Expired() {
-		return zero[T](), false
+		return *new(T), false
 	}
 	return it.data.(T), true
-}
-
-func zero[T any]() T {
-	var t T
-	return t
 }
 
 func Delete(key string) {

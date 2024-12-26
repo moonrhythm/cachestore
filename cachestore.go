@@ -3,8 +3,23 @@ package cachestore
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 )
+
+var disabled uint32
+
+func SetDisable(value bool) {
+	if value {
+		atomic.StoreUint32(&disabled, 1)
+	} else {
+		atomic.StoreUint32(&disabled, 0)
+	}
+}
+
+func isDisabled() bool {
+	return atomic.LoadUint32(&disabled) == 1
+}
 
 var store sync.Map
 
@@ -32,6 +47,10 @@ type SetOptions struct {
 }
 
 func Set(key string, value any, opt *SetOptions) {
+	if isDisabled() {
+		return
+	}
+
 	it := item{
 		data:      value,
 		createdAt: time.Now(),
@@ -44,6 +63,10 @@ func Set(key string, value any, opt *SetOptions) {
 }
 
 func Get[T any](key string) (T, bool) {
+	if isDisabled() {
+		return *new(T), false
+	}
+
 	v, ok := store.Load(key)
 	if !ok {
 		return *new(T), false
@@ -56,6 +79,10 @@ func Get[T any](key string) (T, bool) {
 }
 
 func GetStale[T any](key string) (T, bool) {
+	if isDisabled() {
+		return *new(T), false
+	}
+
 	v, ok := store.Load(key)
 	if !ok {
 		return *new(T), false
